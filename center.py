@@ -1,27 +1,43 @@
 import numpy as np
 
+
 def center(x):
-    '''
-    CENTER(X) centers the data in X by subtraction of the
-    mean XM. If X contains NaNs, indicating missing values, the mean
-    of X is computed from the available data.
+    """
+    Center data by subtraction of the mean.
 
-    See also NANMEAN, MEAN.
-    '''
-    #error(narginchk(1,1,nargin))           # check number of input arguments 
+    If X contains NaNs indicating missing values, the mean is computed
+    from the available data only.
+
+    Args:
+        x (np.ndarray): Input vector or 2-D array.
+
+    Returns:
+        tuple:
+            xc (np.ndarray): Centered data with mean removed.
+            xm (np.ndarray): Column-wise mean of x.
+
+    Raises:
+        ValueError: If x has more than 2 dimensions.
+
+    See also:
+        np.nanmean, np.mean
+    """
     if x.ndim > 2:
-        raise ValueError("X must be vector or 2-D array.")
-    
-    #if x is a vector, make sure it is a row vector
-    if len(x)==np.prod(x.shape):
+        raise ValueError("X must be a vector or 2-D array.")
+
+    # If x is a vector, make sure it is a column vector
+    if len(x) == np.prod(x.shape):
         x = x.reshape(-1, 1)
-    [m,n] = x.shape
 
-    #get the mean of x
-    if np.any(np.any(np.isnan(x))):         # there are missing values in x
-        xm = np.nanmean(x,axis=0)
-    else:                                   # no missing values
-        xm = np.mean(x,axis=0)
+    m, n = x.shape
 
-    #remove mean
+    # Get mean of x
+    if np.any(np.any(np.isnan(x))):     # there are missing values in x
+        xm = np.nanmean(x, axis=0)
+    else:                               # no missing values
+        xm = np.mean(x, axis=0)
+
+    # Remove mean
     xc = x - np.tile(xm, (m, 1))
+
+    return xc, xm
