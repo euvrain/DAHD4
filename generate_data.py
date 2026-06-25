@@ -1,4 +1,7 @@
 import numpy as np
+import scipy
+import scipy.signal
+import matplotlib.pyplot as plt
 # %Generate time series
 # Generate multivariate time series, each of them a linear combination of
 # sinusoids with different period length |f0| and variance |f0Var|.
@@ -24,143 +27,129 @@ f0Var = np.array([
          [0.2,  0.4, 0.0,  0.4],
          [0.3,  0.0, 0.4,  0.3]])
 
+D = f0Var.shape[0]
+np.random.seed(0)
+N=t.length
 
-''' 
-TODO: MATLAB -> Python conversion for f0Var
+NoiseLevel=0.6
+#NoiseLevel=0.0
 
-D=size(f0Var,1);
-rng('default');
-N=length(t);
+ARCoeff=np.random.rand(1,D)*0.1+0.55
+ARVar=1-ARCoeff**2
 
+#combination of sinusoids
+xreff=np.zeros((N,D,len(f0)))
+xref=np.zeros((N,D))
+beta=np.zeros((D,len(f0)))
+for d in range(D):
+    for pos in range(len(f0)):
+        beta[d,pos]=np.random.rand(1)*2*np.pi
+        xreff[:,d,pos]=np.sqrt(f0Var[d,pos])*np.sin(2*np.pi*f0[pos]*t+beta[d,pos])
+xref=np.squeeze(np.sum(xreff,axis=2))
 
-NoiseLevel=0.6; %%
-%NoiseLevel=0.; %%
+#########################
+xref1=np.squeeze(xreff[:,:,0])/np.sqrt(0.5)*np.sqrt(1-NoiseLevel)
+xref2=np.squeeze(xreff[:,:,1])/np.sqrt(0.5)*np.sqrt(1-NoiseLevel)  
+xref3=np.squeeze(xreff[:,:,2])/np.sqrt(0.5)*np.sqrt(1-NoiseLevel)  
+xref4=np.squeeze(xreff[:,:,3])/np.sqrt(0.5)*np.sqrt(1-NoiseLevel)     
+#########################
+xref=xref/np.sqrt(0.5)
+#########################
 
-ARCoeff=rand(1,D)*0.1+0.55;
-ARVar=1-ARCoeff.^2;
+#AR(1) process
+r=np.random.randn(N,D)
+for d in range(D):
+    r[:,d]=scipy.signal.lfilter([np.sqrt(ARVar[d])],[1, -ARCoeff[d]],r[:,d])
 
-% combination of sinusoids
-xreff=zeros(N,D,length(f0));
-xref=zeros(N,D);
-beta=zeros(D,length(f0));
-for d=1:D
-  for pos=1:length(f0);
-    beta(d,pos)=rand(1)*2*pi;
-    xreff(:,d,pos)=sqrt(f0Var(d,pos))*sin(2*pi*f0(pos)*t+beta(d,pos));
-  end
-end
-xref=squeeze(sum(xreff,3));
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-xref1=squeeze(xreff(:,:,1))/sqrt(0.5)*sqrt(1-NoiseLevel);
-xref2=squeeze(xreff(:,:,2))/sqrt(0.5)*sqrt(1-NoiseLevel);
-xref3=squeeze(xreff(:,:,3))/sqrt(0.5)*sqrt(1-NoiseLevel);
-xref4=squeeze(xreff(:,:,4))/sqrt(0.5)*sqrt(1-NoiseLevel);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-xref=xref/sqrt(0.5);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#sinusoid + AR(1)
+data=np.sqrt(1-NoiseLevel)*xref + np.sqrt(NoiseLevel)*r
+noise=np.sqrt(NoiseLevel)*r
+xref=np.sqrt(1-NoiseLevel)*xref
 
-% AR(1) process
-r=randn(N,D);
-for d=1:D
-  r(:,d)=filter(sqrt(ARVar(d)),[1 -ARCoeff(d)],r(:,d));
-end
+sinal=xref
+x=data
 
-% sinusoid + AR(1)
-data=sqrt(1-NoiseLevel)*xref + sqrt(NoiseLevel)*r;
-noise = sqrt(NoiseLevel)*r;
-xref = sqrt(1-NoiseLevel)*xref;
-signal = xref;
-x = data;
+xmax=0.5
+xmin=-.05
+iplot=1
 
-xmax=0.5;
-xmin=-0.5;
-iplot =1;
-if iplot ==1
-fig=figure('Units','centimeter',...
-'Position',[0.1 0.1 40 40],...
-'DefaultAxesFontWeight', 'bold',...
-'DefaultAxesFontSize', 10,'PaperUnits','centimeter','PaperPositionMode', 'auto','PaperSize',[40 40]);
-subplot(321)
-%set(gca,'FontSize',16);
-contourf(xref1',20,'EdgeColor','none');
-shading flat
-colorbar
-caxis([xmin xmax]);
-colormap('jet')
-title('(a) Mode 1');
-%title('(a)$x_i^1$', 'fontsize',16,'interpreter','latex');
-xlabel('Time')
-ylabel('Space')
-set(gca,'FontSize',16);
+if iplot == 1:
+    fig = plt.figure(figsize=(40/2.54, 40/2.54),  # centimeters to inches
+                     dpi=100)
+    plt.rcParams.update({
+        'axes.labelweight': 'bold',
+        'axes.titleweight': 'bold',
+        'axes.labelsize': 10,
+        'axes.titlesize': 10
+    })
 
-subplot(322)
-set(gca,'FontSize',16);
-contourf(xref2',20,'EdgeColor','none');
-		 shading flat
-		 colorbar
-		 caxis([xmin xmax]);
-colormap('jet')
-title('(b) Mode 2');
-%title('(b)$x_i^2$', 'fontsize',16,'interpreter','latex');
-xlabel('Time')
-ylabel('Space')
-set(gca,'FontSize',16);
-		 
-		 subplot(323)
-		 set(gca,'FontSize',16);
-		 contourf(xref3',20,'EdgeColor','none');
-colorbar
-shading flat
-caxis([xmin xmax]);
-colormap('jet')
-title('(c) Mode 3');
-%title('(c)$x_i^3$', 'fontsize',16,'interpreter','latex');
-xlabel('Time')
-ylabel('Space')
-set(gca,'FontSize',16);
+    plt.subplot(321)
+    # plt.gca().tick_params(labelsize=16)
+    cf = plt.contourf(xref1.T, 20, cmap='jet')
+    plt.colorbar(cf)
+    cf.set_clim(xmin, xmax)
+    plt.title('(a) Mode 1')
+    # plt.title('(a)$x_i^1$', fontsize=16)
+    plt.xlabel('Time')
+    plt.ylabel('Space')
+    plt.gca().tick_params(labelsize=16)
 
+    plt.subplot(322)
+    plt.gca().tick_params(labelsize=16)
+    cf = plt.contourf(xref2.T, 20, cmap='jet')
+    plt.colorbar(cf)
+    cf.set_clim(xmin, xmax)
+    plt.title('(b) Mode 2')
+    # plt.title('(b)$x_i^2$', fontsize=16)
+    plt.xlabel('Time')
+    plt.ylabel('Space')
+    plt.gca().tick_params(labelsize=16)
 
-subplot(324)
-set(gca,'FontSize',16);
-contourf(xref4',20,'EdgeColor','none');
-		 shading flat
-		 colorbar
-		 caxis([xmin xmax]);
-colormap('jet')
-title('(d) Mode 4');
-%title('(d)$x_i^4$', 'fontsize',16,'interpreter','latex');
-xlabel('Time')
-ylabel('Space')
-set(gca,'FontSize',16);
+    plt.subplot(323)
+    plt.gca().tick_params(labelsize=16)
+    cf = plt.contourf(xref3.T, 20, cmap='jet')
+    plt.colorbar(cf)
+    cf.set_clim(xmin, xmax)
+    plt.title('(c) Mode 3')
+    # plt.title('(c)$x_i^3$', fontsize=16)
+    plt.xlabel('Time')
+    plt.ylabel('Space')
+    plt.gca().tick_params(labelsize=16)
 
-subplot(325)
-set(gca,'FontSize',16);
-contourf(signal',20,'EdgeColor','none');
-shading flat
-title(' (e) Signal: Sum of Modes 1-4 ');
-%title('(e) Signal: $\sum_{j=1}^{j=4}x_i^j$', 'fontsize',16,'interpreter','latex');
-colorbar
-caxis([-2 2]);
-colormap('jet')
-xlabel('Time')
-ylabel('Space')
-set(gca,'FontSize',16);
+    plt.subplot(324)
+    plt.gca().tick_params(labelsize=16)
+    cf = plt.contourf(xref4.T, 20, cmap='jet')
+    plt.colorbar(cf)
+    cf.set_clim(xmin, xmax)
+    plt.title('(d) Mode 4')
+    # plt.title('(d)$x_i^4$', fontsize=16)
+    plt.xlabel('Time')
+    plt.ylabel('Space')
+    plt.gca().tick_params(labelsize=16)
 
-subplot(326)
-set(gca,'FontSize',16);
-contourf(data',20,'EdgeColor','none');
-shading flat
-%title('(f)$\sum_{j=1}^{j=4}x_i^j$', 'fontsize',12,'interpreter','latex');
-%title('(f) Data: Signal + Noise','fontsize',16,'interpreter','latex');
-title('(f) Data: Signal + Noise');
-colorbar
-caxis([-2 2]);
-colormap('jet')
-ylabel('Space')
-xlabel('Time')
-set(gca,'FontSize',16);
+    plt.subplot(325)
+    plt.gca().tick_params(labelsize=16)
+    cf = plt.contourf(signal.T, 20, cmap='jet')
+    plt.colorbar(cf)
+    cf.set_clim(-2, 2)
+    plt.title('(e) Signal: Sum of Modes 1-4')
+    # plt.title('(e) Signal: $\\sum_{j=1}^{j=4}x_i^j$', fontsize=16)
+    plt.xlabel('Time')
+    plt.ylabel('Space')
+    plt.gca().tick_params(labelsize=16)
 
-         end
+    plt.subplot(326)
+    plt.gca().tick_params(labelsize=16)
+    cf = plt.contourf(data.T, 20, cmap='jet')
+    plt.colorbar(cf)
+    cf.set_clim(-2, 2)
+    # plt.title('(f)$\\sum_{j=1}^{j=4}x_i^j$', fontsize=12)
+    # plt.title('(f) Data: Signal + Noise', fontsize=16)
+    plt.title('(f) Data: Signal + Noise')
+    plt.colorbar(cf)
+    plt.ylabel('Space')
+    plt.xlabel('Time')
+    plt.gca().tick_params(labelsize=16)
 
-
-'''
+    plt.tight_layout()
+    plt.show()
