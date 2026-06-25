@@ -2,7 +2,7 @@ import numpy as np
 from scipy.signal import lfilter
 def dahc(X,E):
     '''
- Syntax: dahc(X,E);
+Syntax: dahc(X,E);
  This function calculates the 'DAH coefficients' of the data
  matrix X (N x L) from the eigenfunction matrix E (from DAHD function).
  The eigenvector matrix may be of reduced size (k columns) - one
