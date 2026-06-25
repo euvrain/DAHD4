@@ -1,3 +1,4 @@
+import numpy as np
 def hrc(A,E,L,index):
 # % This function calculates the 'Reconstructed Harmonic Components' using the
 # % DAHD modes (E) and DAHD coefficients (A) corresponding to a given frequency band. 
@@ -26,26 +27,28 @@ def hrc(A,E,L,index):
 
     ml,k=E.shape
     ra, ka=A.shape
-# if k~=ka, error('E and A must have the same number of columns.'), end
-# if nargin==3, index=1:k; end
+    if k!=ka:
+        raise ValueError('E and A must have the same number of columns.')
+ #   if nargin==3:
+ #       index=1:k
 
-# M=ml/L;   %     These lines assume that E and A
-# N=ra+M-1; %     have the "right" row dimensions.
-# MT=ra;
+    M=ml/L   #    These lines assume that E and A
+    N=ra+M-1 #     have the "right" row dimensions.
+    MT=ra
 
-# R=zeros(N,L*length(index));
-# Z=zeros(M-1,k);
-# A=[A' Z']; % zero pad A to make it N by k
-# A=A';
-# Ej=zeros(M,L);
+    R=np.zeros((N,L*index.length))  # Initialize the HRC matrix;
+    Z=np.zeros((M-1,k))
+    A = np.vstack([A, Z]) # zero pad A to make it N by k
+    A=np.transpose(A)
+    Ej=np.zeros((M,L))
 
-# % Calculate HRCs
-# for j=1:length(index)
-#   Ej(:)=E(:,index(j)); % Convert the j-th DAHM into a matrix of filters
-#   for i=1:L     % Compute the HRCs for the j-th DAHM/DAHC pair
-#     R(:,(j-1)*L+i)=filter(Ej(:,i),M,A(:,index(j)));
-#   end
-# end
+    #Calculate HRCs
+    for j in range(index.length):
+       Ej[:]=E[:,index(j)]; # Convert the j-th DAHM into a matrix of filters
+    #   for i=1:L     % Compute the HRCs for the j-th DAHM/DAHC pair
+    #     R(:,(j-1)*L+i)=filter(Ej(:,i),M,A(:,index(j)));
+    #   end
+    # end
 # % Adjust first M-1 rows and last M-1 rows
 # Rs = zeros(N,L);
 # for j=1:length(index)
