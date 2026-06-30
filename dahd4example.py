@@ -4,7 +4,7 @@ from time import time
 from center import center
 from dahc import dahc
 from hrc import hrc
-from dahd4freq_part_weight_placeholder import DAHD4freq_part_weight
+from DAHD4freq_part_weight import DAHD4freq_part_weight
 from DAHM4_ex import DAHM4_ex
 from generate_data import x, xref1, xref2, xref3, xref4, N
 

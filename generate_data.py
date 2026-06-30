@@ -42,7 +42,7 @@ beta = np.zeros((D, len(f0)))
 
 for d in range(D):
     for pos in range(len(f0)):
-        beta[d, pos] = np.random.rand(1) * 2 * np.pi
+        beta[d, pos] = np.random.rand() * 2 * np.pi
         xreff[:, d, pos] = (
             np.sqrt(f0Var[d, pos])
             * np.sin(2 * np.pi * f0[pos] * t + beta[d, pos]).squeeze()
@@ -89,7 +89,6 @@ if iplot == 1:
 
     plt.subplot(321)
     cf = plt.contourf(xref1.T, 20, cmap='jet', vmin=xmin, vmax=xmax)
-    cf.collections[0].set_edgecolor('none')
     plt.colorbar(cf)
     plt.title('(a) Mode 1')
     plt.xlabel('Time')
@@ -99,7 +98,6 @@ if iplot == 1:
     plt.subplot(322)
     plt.gca().tick_params(labelsize=16)
     cf = plt.contourf(xref2.T, 20, cmap='jet', vmin=xmin, vmax=xmax)
-    cf.collections[0].set_edgecolor('none')
     plt.colorbar(cf)
     plt.title('(b) Mode 2')
     plt.xlabel('Time')
@@ -109,7 +107,6 @@ if iplot == 1:
     plt.subplot(323)
     plt.gca().tick_params(labelsize=16)
     cf = plt.contourf(xref3.T, 20, cmap='jet', vmin=xmin, vmax=xmax)
-    cf.collections[0].set_edgecolor('none')
     plt.colorbar(cf)
     plt.title('(c) Mode 3')
     plt.xlabel('Time')
@@ -119,7 +116,6 @@ if iplot == 1:
     plt.subplot(324)
     plt.gca().tick_params(labelsize=16)
     cf = plt.contourf(xref4.T, 20, cmap='jet', vmin=xmin, vmax=xmax)
-    cf.collections[0].set_edgecolor('none')
     plt.colorbar(cf)
     plt.title('(d) Mode 4')
     plt.xlabel('Time')
@@ -129,7 +125,6 @@ if iplot == 1:
     plt.subplot(325)
     plt.gca().tick_params(labelsize=16)
     cf = plt.contourf(signal.T, 20, cmap='jet', vmin=-2, vmax=2)
-    cf.collections[0].set_edgecolor('none')
     plt.colorbar(cf)
     plt.title('(e) Signal: Sum of Modes 1-4')
     plt.xlabel('Time')
@@ -139,7 +134,6 @@ if iplot == 1:
     plt.subplot(326)
     plt.gca().tick_params(labelsize=16)
     cf = plt.contourf(data.T, 20, cmap='jet', vmin=-2, vmax=2)
-    cf.collections[0].set_edgecolor('none')
     plt.colorbar(cf)
     plt.title('(f) Data: Signal + Noise')
     plt.xlabel('Time')
