@@ -74,7 +74,6 @@ def DAHD4freq_part_weight(X, W, NFE, NP, wt):
         toto2 = np.squeeze(toto[NF, :, :] * cf2)
         if np.trace(toto2) < 0:
             toto2 = -toto2
-
         # Top NP eigenvalues/eigenvectors (eigh sorts ascending, so reverse)
         eigenvalues, ee = eigh(toto2, subset_by_index=[dim - NP, dim - 1])
         eigenvalues = eigenvalues[::-1]

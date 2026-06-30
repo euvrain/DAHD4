@@ -41,9 +41,9 @@ def DAHM4_ex(vv, W, NF, NT):
             i2 = 2 * i
             cvv = 1j * vv[:, i]
             fftv[NF, :, i2] = np.sqrt(W - 0.5) * vv[:, i]
-            fftv[-NF + 1, :, i2] = np.sqrt(W - 0.5) * np.conj(vv[:, i])
+            fftv[-NF, :, i2] = np.sqrt(W - 0.5) * np.conj(vv[:, i])
             fftv[NF, :, i2 + 1] = np.sqrt(W - 0.5) * cvv
-            fftv[-NF + 1, :, i2 + 1] = np.sqrt(W - 0.5) * np.conj(cvv)
+            fftv[-NF, :, i2 + 1] = np.sqrt(W - 0.5) * np.conj(cvv)
     else:
         for i in range(NT // 2):
             cvv = 1j * vv[:, i]
