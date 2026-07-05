@@ -41,7 +41,7 @@ def DAHD4freq_part_weight(X, W, NFE, NP, wt):
     """
     WW = 2 * W - 1
     dim = X.shape[1]
-    cspec = np.zeros((WW, dim, dim))
+    cspec = np.zeros((WW, dim, dim), dtype=complex)  # FIX: must be complex to preserve imaginary part
 
     # Select temporal weighting window
     if wt == 'hamming':
@@ -65,22 +65,22 @@ def DAHD4freq_part_weight(X, W, NFE, NP, wt):
 
     toto = np.fft.fft(cspec, axis=0)
 
-    VP = np.zeros((NP, NFE))
+    VP  = np.zeros((NP, NFE))
     VPT = np.zeros((NP, NFE))
-    FEP = np.zeros((dim, NP, NFE))
+    FEP = np.zeros((dim, NP, NFE), dtype=complex)  # FIX: must be complex to preserve imaginary part
 
     for NF in range(NFE):
-        cf2 = np.exp(-1j * NF * np.pi / WW)
+        cf2   = np.exp(-1j * NF * np.pi / WW)
         toto2 = np.squeeze(toto[NF, :, :] * cf2)
         if np.trace(toto2) < 0:
             toto2 = -toto2
         # Top NP eigenvalues/eigenvectors (eigh sorts ascending, so reverse)
         eigenvalues, ee = eigh(toto2, subset_by_index=[dim - NP, dim - 1])
         eigenvalues = eigenvalues[::-1]
-        ee = ee[:, ::-1]
+        ee          = ee[:, ::-1]
 
-        VPT[:, NF] = np.real(eigenvalues)
-        VP[:, NF] = np.abs(eigenvalues)
+        VPT[:, NF]    = np.real(eigenvalues)
+        VP[:, NF]     = np.abs(eigenvalues)
         FEP[:, :, NF] = np.conj(ee)
 
         numPositive = np.sum(eigenvalues > 0)
@@ -88,7 +88,7 @@ def DAHD4freq_part_weight(X, W, NFE, NP, wt):
         print(f"{NF} >0:{numPositive} <0:{numNegative}")
 
     # Resolved frequency bins
-    M1 = 2 * W - 1
+    M1  = 2 * W - 1
     MM2 = (M1 - 1) / 2
     fE2 = np.zeros(NFE)
     for j in range(NFE):
