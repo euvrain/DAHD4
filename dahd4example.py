@@ -22,7 +22,7 @@ panels = [
     (323, xref3,  '(c) Mode 3',                   xmin, xmax),
     (324, xref4,  '(d) Mode 4',                   xmin, xmax),
     (325, signal, '(e) Signal: Sum of Modes 1-4', -2,   2),
-    (326, data,   '(f) Data: Signal + Noise',      -2,   2),
+    (326, data,   '(f) Data: Signal + Noise',     -2,   2),
 ]
 for sp, arr, title, vmin, vmax in panels:
     plt.subplot(sp)
@@ -41,18 +41,34 @@ fpcs, _ = center(x)
 W   = 65
 WW  = 2 * W - 1
 D   = fpcs.shape[1]
-NP  = D
 NFE = W
-wt  = 'hamming'
 
-# ── 3. DAHD spectrum (Fig 2) ──────────────────────────────────────────────────
+# ── 3. DAHD spectrum NO weighting (Fig 2) ────────────────────────────────────
 start = time()
-fE2, VP, FEP = DAHD4freq_part_weight(fpcs, W, NFE, NP, wt)
-print(f"Elapsed time: {time() - start:.4f} seconds")
+fE2_nw, VP_nw, _ = DAHD4freq_part_weight(fpcs, W, NFE, D, 'none')
+print(f"Spectrum (no weight) elapsed: {time() - start:.4f} seconds")
 
 NP = 1
 fig2 = plt.figure(2)
 plt.rcParams.update({'font.size': 16})
+plt.semilogy(fE2_nw[1:], np.abs(VP_nw[:, 1:]).T, 'ro', markersize=4, markerfacecolor='r')
+plt.semilogy(fE2_nw[17], np.abs(VP_nw[:NP, 17]), 'bo', markersize=8, markerfacecolor='b')
+plt.semilogy(fE2_nw[26], np.abs(VP_nw[:NP, 26]), 'co', markersize=8, markerfacecolor='c')
+plt.semilogy(fE2_nw[46], np.abs(VP_nw[:NP, 46]), 'go', markersize=8, markerfacecolor='g')
+plt.semilogy(fE2_nw[56], np.abs(VP_nw[:NP, 56]), 'ko', markersize=8, markerfacecolor='k')
+plt.ylabel(r'$\lambda$')
+plt.xlim([0, 0.5])
+plt.ylim(bottom=1e-2)
+plt.xlabel('Freq')
+plt.tight_layout()
+plt.show()
+
+# ── 4. DAHD spectrum WITH Hamming weighting (Fig 3) ──────────────────────────
+start = time()
+fE2, VP, FEP = DAHD4freq_part_weight(fpcs, W, NFE, D, 'hamming')
+print(f"Spectrum (hamming) elapsed: {time() - start:.4f} seconds")
+
+fig3 = plt.figure(3)
 plt.semilogy(fE2[1:], np.abs(VP[:, 1:]).T, 'ro', markersize=4, markerfacecolor='r')
 plt.semilogy(fE2[17], np.abs(VP[:NP, 17]), 'bo', markersize=8, markerfacecolor='b')
 plt.semilogy(fE2[26], np.abs(VP[:NP, 26]), 'co', markersize=8, markerfacecolor='c')
@@ -62,20 +78,19 @@ plt.ylabel(r'$\lambda$')
 plt.xlim([0, 0.5])
 plt.ylim(bottom=1e-2)
 plt.xlabel('Freq')
-plt.title('Figure 2: DAHD Spectrum')
 plt.tight_layout()
 plt.show()
 
-# ── 4. Compute DAHMs ──────────────────────────────────────────────────────────
+# ── 5. Compute DAHMs (using Hamming-weighted FEP) ────────────────────────────
 EP = np.zeros(((2 * W - 1) * D, 2 * NP, NFE))
 start = time()
 for iff in range(NFE):
     ER  = DAHM4_ex(FEP[:, :, iff], W, iff, 2 * NP)
     ERR = np.reshape(ER, ((2 * W - 1) * D, 2 * NP))
     EP[:, :, iff] = ERR
-print(f"Elapsed time: {time() - start:.4f} seconds")
+print(f"DAHMs elapsed: {time() - start:.4f} seconds")
 
-# ── 5. Plot DAHMs (Fig 4) ─────────────────────────────────────────────────────
+# ── 6. Plot DAHMs (Fig 4) ─────────────────────────────────────────────────────
 tt = ['(a) f_1', '(b) f_2', '(c) f_3', '(d) f_4']
 ff = [17, 26, 46, 56]
 
@@ -110,7 +125,7 @@ for pos in range(4):
 plt.subplots_adjust(hspace=1.0, wspace=0.5)
 plt.show()
 
-# ── 6. Reconstruction ─────────────────────────────────────────────────────────
+# ── 7. Reconstruction ─────────────────────────────────────────────────────────
 ifff = [17, 26, 46, 56]
 NE   = fpcs.shape[0]
 NPP  = 1
@@ -129,7 +144,7 @@ R2 = np.squeeze(PCF[:, :, 1])
 R3 = np.squeeze(PCF[:, :, 2])
 R4 = np.squeeze(PCF[:, :, 3])
 
-# ── 7. Normalized RMSE ───────────────────────────────────────────────────────
+# ── 8. Normalized RMSE ───────────────────────────────────────────────────────
 print('Normalized RMSE of reconstruction:')
 for label, ref, rec in zip(['f_1', 'f_2', 'f_3', 'f_4'],
                             [xref1, xref2, xref3, xref4],
@@ -137,7 +152,7 @@ for label, ref, rec in zip(['f_1', 'f_2', 'f_3', 'f_4'],
     rmse = np.sum((ref - rec) ** 2) / np.sum(ref ** 2)
     print(f"  {label}: {rmse:.4f}")
 
-# ── 8. Plot HRC reconstructions (Fig 5) ──────────────────────────────────────
+# ── 9. Plot HRC reconstructions (Fig 5) ──────────────────────────────────────
 fig5 = plt.figure(5, figsize=(20 / 2.54, 40 / 2.54), dpi=100)
 plt.rcParams.update({
     'axes.labelweight': 'bold',
