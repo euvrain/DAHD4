@@ -1,0 +1,85 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+
+title: "DAHD4: Python Conversion of Data-Adaptive Harmonic Decomposition"
+abstract: >
+  Python conversion of the DAHD (Data-Adaptive Harmonic Decomposition) MATLAB
+  codebase developed for NSF-funded Arctic sea ice forecasting research.
+  Includes full spectral decomposition pipeline, space-time DAHM computation,
+  harmonic reconstruction, and multi-level stochastic Stuart-Landau model (MSLM)
+  forecasting. Validated against original MATLAB output with documented bug fixes
+  and RMSE verification.
+
+authors:
+  - family-names: McDonald
+    given-names: Taylor
+    affiliation: "SETI Institute"
+    email: ""
+
+  - family-names: Kondrashov
+    given-names: Dmitri
+    affiliation: "University of California, Los Angeles"
+    email: dkondras@atmos.ucla.edu
+    orcid: ""
+
+date-released: 2026-07-20
+version: "1.0.0"
+license: MIT
+repository-code: "https://github.com/taylormcdonald/DAHD4"
+keywords:
+  - arctic-sea-ice
+  - data-adaptive-harmonic-decomposition
+  - DAHD
+  - machine-learning
+  - time-series
+  - forecasting
+  - python
+  - NSF
+
+references:
+  - type: article
+    title: >
+      Accurate and robust real-time prediction of September Arctic sea ice
+    authors:
+      - family-names: Kondrashov
+        given-names: Dmitri
+      - family-names: Sudakow
+        given-names: Ivan
+      - family-names: Livina
+        given-names: Valerie
+      - family-names: Yang
+        given-names: Qing
+    journal: "Chaos"
+    volume: 36
+    year: 2026
+    doi: 10.1063/5.0295634
+
+  - type: article
+    title: >
+      Data-adaptive harmonic analysis of oceanic waves and turbulent flows
+    authors:
+      - family-names: Kondrashov
+        given-names: Dmitri
+      - family-names: Ryzhov
+        given-names: Evgeny
+      - family-names: Berloff
+        given-names: Pavel
+    journal: "Chaos"
+    volume: 30
+    year: 2020
+    doi: 10.1063/5.0012077
+
+  - type: article
+    title: >
+      Data-adaptive harmonic spectra and multilayer Stuart-Landau models
+    authors:
+      - family-names: Chekroun
+        given-names: Mickael D.
+      - family-names: Kondrashov
+        given-names: Dmitri
+    journal: "Chaos"
+    volume: 27
+    issue: 9
+    year: 2017
+    doi: 10.1063/1.4989400
