@@ -200,3 +200,13 @@ This example uses the maximum embedding window M = (N+1)/2 = 65, giving WW = 2M-
 Original MATLAB code: Dmitri Kondrashov — dkondras@atmos.ucla.edu
 
 Python conversion: Taylor McDonald — SETI Institute, 2026
+
+## How to Cite
+
+If you use this code, please cite:
+
+Kondrashov, D., I. Sudakow, V. Livina, and Q. Yang, 2026: Accurate and robust
+real-time prediction of September Arctic sea ice. Chaos, 36, 023110.
+doi:10.1063/5.0295634
+
+Python conversion by Taylor McDonald, SETI Institute, 2026.
