@@ -1,5 +1,9 @@
 # DAHD4
 
+![Python](https://img.shields.io/badge/python-3.8+-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![NSF Funded](https://img.shields.io/badge/funded-NSF-blue)
+
 Python conversion of the DAHD (Data-Adaptive Harmonic Decomposition) MATLAB codebase, developed as part of an NSF-funded Arctic sea ice forecasting project at the SETI Institute in collaboration with UCLA and UCSB.
 
 Original MATLAB code written by Dmitri Kondrashov (UCLA). Python conversion by Taylor McDonald (SETI Institute, 2026).
