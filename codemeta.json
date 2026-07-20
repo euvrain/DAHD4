@@ -1,0 +1,128 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "DAHD4: Python Conversion of Data-Adaptive Harmonic Decomposition",
+  "description": "Python conversion of the DAHD (Data-Adaptive Harmonic Decomposition) MATLAB codebase developed for NSF-funded Arctic sea ice forecasting research. Includes full spectral decomposition pipeline, space-time DAHM computation, harmonic reconstruction, and multi-level stochastic Stuart-Landau model (MSLM) forecasting. Validated against original MATLAB output with documented bug fixes and RMSE verification.",
+  "version": "1.0.0",
+  "dateCreated": "2026-07-20",
+  "datePublished": "2026-07-20",
+  "license": "https://spdx.org/licenses/MIT",
+  "programmingLanguage": {
+    "@type": "ComputerLanguage",
+    "name": "Python",
+    "version": "3.8+"
+  },
+  "runtimePlatform": "Python 3.8+",
+  "operatingSystem": [
+    "Linux",
+    "macOS",
+    "Windows"
+  ],
+  "softwareRequirements": [
+    "numpy>=1.23",
+    "scipy>=1.9",
+    "matplotlib>=3.6",
+    "openpyxl>=3.0"
+  ],
+  "codeRepository": "https://github.com/euvrain/DAHD4",
+  "issueTracker": "https://github.com/euvrain/DAHD4/issues",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Taylor",
+      "familyName": "McDonald",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "SETI Institute"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Dmitri",
+      "familyName": "Kondrashov",
+      "email": "dkondras@atmos.ucla.edu",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "University of California, Los Angeles"
+      }
+    }
+  ],
+  "contributor": [
+    {
+      "@type": "Person",
+      "givenName": "Ivan",
+      "familyName": "Sudakow",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "University of California, Santa Barbara"
+      }
+    }
+  ],
+  "funder": {
+    "@type": "Organization",
+    "name": "National Science Foundation (NSF)"
+  },
+  "keywords": [
+    "arctic sea ice",
+    "data-adaptive harmonic decomposition",
+    "DAHD",
+    "machine learning",
+    "time series",
+    "forecasting",
+    "spectral analysis",
+    "Stuart-Landau model",
+    "Python",
+    "NSF"
+  ],
+  "referencePublication": [
+    {
+      "@type": "ScholarlyArticle",
+      "name": "Accurate and robust real-time prediction of September Arctic sea ice",
+      "author": [
+        {"@type": "Person", "givenName": "Dmitri",   "familyName": "Kondrashov"},
+        {"@type": "Person", "givenName": "Ivan",     "familyName": "Sudakow"},
+        {"@type": "Person", "givenName": "Valerie",  "familyName": "Livina"},
+        {"@type": "Person", "givenName": "Qing",     "familyName": "Yang"}
+      ],
+      "datePublished": "2026",
+      "identifier": "https://doi.org/10.1063/5.0295634",
+      "isPartOf": {
+        "@type": "Periodical",
+        "name": "Chaos",
+        "volumeNumber": "36"
+      }
+    },
+    {
+      "@type": "ScholarlyArticle",
+      "name": "Data-adaptive harmonic analysis of oceanic waves and turbulent flows",
+      "author": [
+        {"@type": "Person", "givenName": "Dmitri",  "familyName": "Kondrashov"},
+        {"@type": "Person", "givenName": "Evgeny",  "familyName": "Ryzhov"},
+        {"@type": "Person", "givenName": "Pavel",   "familyName": "Berloff"}
+      ],
+      "datePublished": "2020",
+      "identifier": "https://doi.org/10.1063/5.0012077",
+      "isPartOf": {
+        "@type": "Periodical",
+        "name": "Chaos",
+        "volumeNumber": "30"
+      }
+    },
+    {
+      "@type": "ScholarlyArticle",
+      "name": "Data-adaptive harmonic spectra and multilayer Stuart-Landau models",
+      "author": [
+        {"@type": "Person", "givenName": "Mickael D.", "familyName": "Chekroun"},
+        {"@type": "Person", "givenName": "Dmitri",    "familyName": "Kondrashov"}
+      ],
+      "datePublished": "2017",
+      "identifier": "https://doi.org/10.1063/1.4989400",
+      "isPartOf": {
+        "@type": "Periodical",
+        "name": "Chaos",
+        "volumeNumber": "27",
+        "issueNumber": "9"
+      }
+    }
+  ]
+}
