@@ -3,9 +3,9 @@
   "@type": "SoftwareSourceCode",
   "name": "DAHD4: Python Conversion of Data-Adaptive Harmonic Decomposition",
   "description": "Python conversion of the DAHD (Data-Adaptive Harmonic Decomposition) MATLAB codebase developed for NSF-funded Arctic sea ice forecasting research. Includes full spectral decomposition pipeline, space-time DAHM computation, harmonic reconstruction, and multi-level stochastic Stuart-Landau model (MSLM) forecasting. Validated against original MATLAB output with documented bug fixes and RMSE verification.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "dateCreated": "2026-07-20",
-  "datePublished": "2026-07-20",
+  "datePublished": "2026-07-27",
   "license": "https://spdx.org/licenses/MIT",
   "programmingLanguage": {
     "@type": "ComputerLanguage",

@@ -15,18 +15,16 @@ authors:
   - family-names: McDonald
     given-names: Taylor
     affiliation: "SETI Institute"
-    email: ""
 
   - family-names: Kondrashov
     given-names: Dmitri
     affiliation: "University of California, Los Angeles"
     email: dkondras@atmos.ucla.edu
-    orcid: ""
 
-date-released: 2026-07-20
-version: "1.0.0"
+date-released: 2026-07-27
+version: "1.1.0"
 license: MIT
-repository-code: "https://github.com/taylormcdonald/DAHD4"
+repository-code: "https://github.com/euvrain/DAHD4"
 keywords:
   - arctic-sea-ice
   - data-adaptive-harmonic-decomposition

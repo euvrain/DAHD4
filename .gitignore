@@ -16,3 +16,6 @@ env/
 # MATLAB
 *.asv
 *.m~
+
+# Data files
+*.xlsx

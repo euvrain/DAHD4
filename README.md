@@ -3,6 +3,7 @@
 ![Python](https://img.shields.io/badge/python-3.8+-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![NSF Funded](https://img.shields.io/badge/funded-NSF-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-orange)
 
 Python conversion of the DAHD (Data-Adaptive Harmonic Decomposition) MATLAB codebase, developed as part of an NSF-funded Arctic sea ice forecasting project at the SETI Institute in collaboration with UCLA and UCSB.
 
@@ -13,6 +14,8 @@ Original MATLAB code written by Dmitri Kondrashov (UCLA). Python conversion by T
 ## Overview
 
 DAHD is a frequency-domain spectral decomposition method for multivariate time series. It identifies spatio-temporal oscillatory modes by eigendecomposing a Hermitian cross-spectral density matrix, then reconstructs those modes via Harmonic Reconstruction Components (HRCs). This repo provides a complete, license-free Python implementation of the DAHD pipeline, validated against the original MATLAB output.
+
+As of v1.1.0, the repo also includes the downstream Arctic sea-ice application: a Multi-Level Stochastic Stuart-Landau Model (MSLM) forecast pipeline that uses the DAHD/HRC decomposition of regional sea-ice-extent time series to drive an ensemble forecast, including a September sea-ice-extent point prediction and a training-window robustness/sensitivity test.
 
 The method is described in:
 - Chekroun, M. D., and D. Kondrashov, 2017: *Data-adaptive harmonic spectra and multilayer Stuart-Landau models.* Chaos, 27, 093110. doi:10.1063/1.4989400
@@ -43,6 +46,13 @@ DAHD4/
 ├── generate_data.ipynb          # Notebook: generate_data
 ├── dahd4example.ipynb           # Notebook: full pipeline
 ├── plothrcmodes.ipynb           # Notebook: plot HRC modes
+├── runMSLM_ice.py               # MSLM forecast driver: DAHD/HRC + Stuart-Landau ensemble forecast (v1.1.0)
+├── MSLM_FCST.py                 # Multi-level stochastic Stuart-Landau ensemble forecast engine (v1.1.0)
+├── runMSLM_ice.ipynb             # Notebook: MSLM forecast driver (v1.1.0)
+├── runMSLM_ice_test.ipynb        # Notebook: MSLM forecast driver, test/dev variant (v1.1.0)
+├── robustness_test.py            # Training-window sensitivity test for the September SIE forecast (v1.1.0)
+├── robustness_test.ipynb         # Notebook: training-window sensitivity test (v1.1.0)
+├── validate_translation.py       # Automated validation suite: unit, data-alignment, and forecast-sanity checks (v1.1.0)
 └── matlab/                      # Original MATLAB source files
 ```
 
@@ -73,6 +83,26 @@ This generates all five figures from Kondrashov (2026):
 - **Fig 4** — Space-time DAHM eigenvector pairs at the four target frequencies
 - **Fig 5** — HRC reconstructions vs reference modes
 
+Run the Arctic sea-ice MSLM forecast pipeline (v1.1.0):
+
+```bash
+python runMSLM_ice.py
+```
+
+This loads the NSIDC Sea Ice Index regional daily data, reconstructs the harmonic components, and produces the regional/pan-Arctic forecast figures plus a September sea-ice-extent ensemble prediction.
+
+Run the training-window robustness/sensitivity test:
+
+```bash
+python robustness_test.py
+```
+
+Run the automated validation suite:
+
+```bash
+python validate_translation.py
+```
+
 ---
 
 ## Python Conversion Notes
@@ -91,6 +121,8 @@ The original MATLAB codebase was converted function by function into Python, pre
 ---
 
 ## Bugs Found and Fixed
+
+### DAHD Synthetic Example (v1.0.0)
 
 Three bugs were identified during numerical validation against MATLAB ground-truth output. All three caused the RMSE of reconstruction to be substantially higher than MATLAB's.
 
@@ -174,6 +206,25 @@ fftv = np.zeros((2 * W - 1, D, NT), dtype=complex)  # FIX: must be complex
 
 ---
 
+### MSLM Forecasting Pipeline (v1.1.0)
+
+Eight further bugs were identified while converting and validating `runMSLM_ice.py`, `MSLM_FCST.py`, and `robustness_test.py` — the downstream Arctic sea-ice application built on top of the DAHD/HRC pipeline above. Full detail for each is in `CHANGELOG.md`; summarized here:
+
+| Bug | File | Issue | Effect |
+|---|---|---|---|
+| 4 | `runMSLM_ice.py` | Year-offset row alignment hardcoded (`1404`) instead of computed from the spreadsheet's actual first year (1978) | Every anomaly/reconstruction computed against the wrong calendar year; correlation to reference `ROBSRF.mat` was 0.0–0.3 |
+| 5 | `runMSLM_ice.py` | MATLAB's second-pass `RXRC`/`RX00` post-processing (add seasonal mean → clip negative extent to 0 → subtract seasonal mean → re-subtract seasonal cycle) was never implemented; only the discarded first pass was | Seasonal cycle stayed mixed into `RXRC`, producing a region-dependent jump at the forecast boundary |
+| 6 | `runMSLM_ice.py` | Forecast-boundary index translated as `NA - 1` instead of `NET - 1` | Forecast boundary offset by ~76 weeks, sometimes landing on `hrc.m`'s edge-tapering-amplified values |
+| 7 | Fig 6 (notebook) | `set_xticks`/`set_xticklabels` count mismatch when the visible range excluded a preset tick | `ValueError` on some x-range subsets |
+| 8 | September SIE prediction | Seasonal-mean ice extent not added back before reporting | Reported forecast was in de-seasonalized anomaly units, not comparable to observed absolute ice extent |
+| 9 | `robustness_test.py` | Same off-by-one as Bug 6, independently present in the standalone script | Same ~76-week forecast-boundary offset in every training-window variant |
+| 10 | `robustness_test.py` | Seasonal mean added twice (once in the `RX0` sequence, again when reporting September SIE), never subtracted back off | Reported September SIE values inflated |
+| 11 | `robustness_test.py` | Training-window subsetting took the *first* N years of data instead of the *last* N years ending at the same real-data cutoff | Shorter training-window variants forecast into the wrong calendar period entirely; September SIE ~12–13 M km² instead of ~4.4–4.7 M km² |
+
+Bug 11 was the dominant issue: after fixing it (together with Bugs 9 and 10), the September SIE prediction across five training-window lengths (10/12/14/16/18 years) came out consistent — 4.66, 4.50, 4.52, 4.53, 4.53 M km² — versus 12–13 M km² before the fix, and versus a ~4.40 M km² reference value.
+
+---
+
 ## Numerical Validation
 
 All RMSE values computed on the synthetic dataset from Kondrashov (2026): N=129, d=6, NoiseLevel=0.6, W=65 (maximum embedding window), Hamming-weighted cross-correlations.
@@ -192,6 +243,16 @@ f_3 and f_4 match MATLAB to within 0.3%. The small remaining gap in f_1 and f_2 
 ### Note on the M = N edge case
 
 This example uses the maximum embedding window M = (N+1)/2 = 65, giving WW = 2M-1 = 129 = N. At this setting the DAHCs collapse to a single scalar value per mode (MT=1), which limits reconstruction accuracy. As noted in Kondrashov (2026) section 3, this is expected behavior for short datasets where maximum spectral resolution is prioritized over reconstruction accuracy. For longer time series, M << N is recommended.
+
+### MSLM Pipeline Validation (v1.1.0)
+
+`validate_translation.py` runs 15 automated checks against the MSLM forecasting pipeline:
+
+- **Unit tests** — physical/mathematical constraints on `dahc`/`hrc` reshaping and on `MSLM_FCST`'s Stuart-Landau ensemble equations
+- **Data-alignment checks** — correlation of computed anomalies against the MATLAB reference output (`ROBSF.mat`, `ROBSFF.mat`)
+- **Forecast-quality/sanity checks** — forecast-boundary continuity, ensemble spread sanity, and September SIE physical plausibility
+
+All 15 checks pass on the current build.
 
 ---
 

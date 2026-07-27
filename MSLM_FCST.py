@@ -55,9 +55,11 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
 
     nmax = DMD.shape[1]
     NTT  = DMD.shape[0]
+    # XX needs NTT + LEAD rows so forecast integration doesn't go out of bounds
+    NXX  = NTT + max(LEAD, 0) + 1
 
     XT_RES = np.zeros((NTT - 1, nmax, NLEVEL))
-    XX     = np.zeros((NTT,     nmax, NLEVEL))
+    XX     = np.zeros((NXX,     nmax, NLEVEL))
     L      = np.zeros((nmax, nmax * NLEVEL, NLEVEL))
     ENL    = np.zeros((nmax, 1))
     F      = np.zeros((nmax, NLEVEL))
@@ -65,7 +67,7 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
 
     XX[:NTT, :, 0] = DMD
     stddata = np.std(XX[:NTT, :, 0], axis=0)
-    stddata = np.where(stddata == 0, 1.0, stddata)  # avoid division by zero
+    stddata = np.where(stddata == 0, 1.0, stddata)
 
     if inorm == 1:
         XX[:NTT, :, 0] = XX[:NTT, :, 0] / stddata
@@ -102,7 +104,6 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
                         xc, _ = _center(xt[:, n:n + 1])
                         xg[r0:r0 + NTE] = xc[:, 0]
 
-                    # FIX: scipy.linalg.lstsq instead of lsq_linear
                     bg, _, _, _ = lstsq(gsvd, xg, check_finite=False)
                     residual = xg - gsvd @ bg
 
@@ -110,7 +111,9 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
                         n  = indk[n_1]
                         c0 = n_1 * (nmax + 2)
                         L[n, :nmax, 0] = bg[c0 + 1: c0 + nmax + 1]
-                        ENL[n, 0]      = bg[c0 + nmax + 1]
+                        # FIX: force ENL <= 0 to prevent Stuart-Landau divergence
+                        # MATLAB enforces this via inEQ inequality constraint
+                        ENL[n, 0]      = min(bg[c0 + nmax + 1], 0.0)
                         F[n, 0]        = bg[c0]
 
                     XT_RES[:NTT, indk[0]:indk[1] + 1, 0] = residual.reshape(NTT, 2)
@@ -161,7 +164,6 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
                     F[n, nl]             = beta[0]
                     XT_RES[:NTT, n, nl]  = xc[:, 0] - A @ beta
 
-        # avoid division by zero in stdr
         stdr[:, nl] = np.std(XT_RES[:NTT, :nmax, nl], axis=0)
         stdr[:, nl] = np.where(stdr[:, nl] == 0, 1.0, stdr[:, nl])
 
@@ -188,12 +190,11 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
     # ── Stochastic forecast setup ─────────────────────────────────────────────
     xt_res = XT_RES[:NTT, :, NLEVEL - 1]
 
-    # Robust covariance: handle NaN, symmetrize, jitter until Cholesky succeeds
     covn = np.nan_to_num(
         np.corrcoef(XT_RES[:NTT, :, NLEVEL - 1].T),
         nan=0.0, posinf=1.0, neginf=0.0
     )
-    covn = (covn + covn.T) / 2   # enforce symmetry
+    covn = (covn + covn.T) / 2
 
     rr     = None
     jitter = 1e-8
@@ -205,11 +206,14 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
             covn += np.eye(covn.shape[0]) * jitter
             jitter *= 10
     if rr is None:
-        rr = np.eye(covn.shape[0])   # last resort: identity
+        rr = np.eye(covn.shape[0])
 
     NE  = DMD.shape[0]
     NEE = NE + LEAD
     XSM = np.zeros((NEE, nmax, NSMT))
+
+    # Clip threshold to prevent runaway values
+    CLIP_VAL = 1e3
 
     iter_count = 0
     NSM        = 0
@@ -218,8 +222,11 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
     while NSM < NSMT:
         iter_count += 1
 
+        # Reset XX forecast portion for each realization
+        XX[NE:, :, :] = 0.0
+
         for NT in range(NE - NLEVEL, NEE - 1):
-            if np.isnan(XX[NT, 0, 0]):
+            if not np.all(np.isfinite(XX[NT, :, 0])):
                 break
 
             for nl in range(NLEVEL):
@@ -232,31 +239,53 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
                 if nl < NLEVEL - 1:
                     cof = stdr[:, nl] if inorm == 1 else np.ones(nmax)
                     nr  = XX[NT, :, nl + 1] * cof
-                    XX[NT + 1, :, nl] = F[:, nl] + XX[NT, :, nl] + tmp + nr
+                    val = F[:, nl] + XX[NT, :, nl] + tmp + nr
                 else:
+                    ic = (iter_count - 1) % indrandperm.shape[2]
                     if ires == 0:
-                        rn = rr @ indrandperm[:nmax, NT, iter_count - 1] * stdr[:, NLEVEL - 1]
+                        rn = rr @ indrandperm[:nmax, NT % indrandperm.shape[1], ic] * stdr[:, NLEVEL - 1]
                     else:
                         ttt    = NT - NE + NLEVEL
-                        timest = int(indrandperm[ttt, iter_count - 1])
-                        rn     = XT_RES[timest, :, -1]
-                    XX[NT + 1, :, nl] = F[:, nl] + XX[NT, :, nl] + tmp + rn
+                        timest = int(indrandperm[ttt % indrandperm.shape[0], ic])
+                        rn     = XT_RES[timest % NTT, :, -1]
+                    val = F[:, nl] + XX[NT, :, nl] + tmp + rn
 
+                # FIX: clip to prevent runaway
+                XX[NT + 1, :, nl] = np.clip(val, -CLIP_VAL, CLIP_VAL)
+
+                # Stuart-Landau nonlinear correction at level 0
+                # ENL is forced <= 0 during fitting so this term damps, not amplifies
                 if nl == 0 and NELIN == 1:
                     for n0 in range(nmax // 2):
                         indk = [2 * n0, 2 * n0 + 1]
                         for n in indk:
-                            pred_nl = (XX[NT, n, 0] *
-                                       (XX[NT, indk[0], 0] ** 2 +
-                                        XX[NT, indk[1], 0] ** 2))
-                            XX[NT + 1, n, 0] += ENL[n, 0] * pred_nl
+                            x0 = XX[NT, n, 0]
+                            x1 = XX[NT, indk[0], 0]
+                            x2 = XX[NT, indk[1], 0]
+                            if np.isfinite(x0) and np.isfinite(x1) and np.isfinite(x2):
+                                pred_nl = x0 * (x1 ** 2 + x2 ** 2)
+                                nl_term = ENL[n, 0] * pred_nl
+                                if np.isfinite(nl_term):
+                                    XX[NT + 1, n, 0] = np.clip(
+                                        XX[NT + 1, n, 0] + nl_term,
+                                        -CLIP_VAL, CLIP_VAL
+                                    )
 
-        if not np.any(np.isnan(XX[:, :, 0])):
+        if np.all(np.isfinite(XX[:NEE, :, 0])):
             NSM += 1
             if inorm == 1:
                 tmp1 = np.squeeze(XX[:NEE, :, 0])
                 XSM[:NEE, :, NSM - 1] = tmp1 * stddata + meandata
             else:
                 XSM[:NEE, :, NSM - 1] = XX[:NEE, :, 0] + meandata
+
+        # Safety: avoid infinite loop
+        if iter_count > NSMT * 10:
+            print(f"Warning: only {NSM}/{NSMT} valid realizations after {iter_count} attempts")
+            # Fill remaining with last valid or zeros
+            if NSM > 0:
+                for k in range(NSM, NSMT):
+                    XSM[:, :, k] = XSM[:, :, NSM - 1]
+            break
 
     return XSM, xt_res, L, ENL
