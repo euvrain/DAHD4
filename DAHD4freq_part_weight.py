@@ -41,7 +41,7 @@ def DAHD4freq_part_weight(X, W, NFE, NP, wt):
     """
     WW = 2 * W - 1
     dim = X.shape[1]
-    cspec = np.zeros((WW, dim, dim), dtype=complex)  # FIX: must be complex to preserve imaginary part
+    cspec = np.zeros((WW, dim, dim), dtype=complex)
 
     # Select temporal weighting window
     if wt == 'hamming':
@@ -67,7 +67,7 @@ def DAHD4freq_part_weight(X, W, NFE, NP, wt):
 
     VP  = np.zeros((NP, NFE))
     VPT = np.zeros((NP, NFE))
-    FEP = np.zeros((dim, NP, NFE), dtype=complex)  # FIX: must be complex to preserve imaginary part
+    FEP = np.zeros((dim, NP, NFE), dtype=complex)
 
     for NF in range(NFE):
         cf2   = np.exp(-1j * NF * np.pi / WW)
