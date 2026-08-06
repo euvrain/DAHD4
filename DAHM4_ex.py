@@ -34,7 +34,6 @@ def DAHM4_ex(vv, W, NF, NT):
 
     EVP = np.zeros(((2 * W - 1) * D, NT))
 
-    # dtype=complex needed to correctly store cvv (1j * vv) without dropping imaginary part
     fftv = np.zeros((2 * W - 1, D, NT), dtype=complex)
 
     if NF > 1:
@@ -42,9 +41,9 @@ def DAHM4_ex(vv, W, NF, NT):
             i2  = 2 * i
             cvv = 1j * vv[:, i]
             fftv[NF, :, i2]      = np.sqrt(W - 0.5) * vv[:, i]
-            fftv[-NF, :, i2]     = np.sqrt(W - 0.5) * np.conj(vv[:, i])  # BUG FIX: was -NF+1
+            fftv[-NF, :, i2]     = np.sqrt(W - 0.5) * np.conj(vv[:, i])
             fftv[NF, :, i2 + 1]  = np.sqrt(W - 0.5) * cvv
-            fftv[-NF, :, i2 + 1] = np.sqrt(W - 0.5) * np.conj(cvv)       # BUG FIX: was -NF+1
+            fftv[-NF, :, i2 + 1] = np.sqrt(W - 0.5) * np.conj(cvv)
     else:
         for i in range(NT // 2):
             cvv = 1j * vv[:, i]
@@ -52,7 +51,6 @@ def DAHM4_ex(vv, W, NF, NT):
 
     Evv = np.fft.ifft(fftv, axis=0)
 
-    # no order='F' — fftv axes (WW, D, NT) reshape to (WW*D, NT) correctly without it
     EVP = np.reshape(np.real(Evv), (Evv.shape[0] * Evv.shape[1], Evv.shape[2]))
 
     return EVP
