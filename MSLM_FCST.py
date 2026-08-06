@@ -55,7 +55,6 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
 
     nmax = DMD.shape[1]
     NTT  = DMD.shape[0]
-    # XX needs NTT + LEAD rows so forecast integration doesn't go out of bounds
     NXX  = NTT + max(LEAD, 0) + 1
 
     XT_RES = np.zeros((NTT - 1, nmax, NLEVEL))
@@ -111,7 +110,6 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
                         n  = indk[n_1]
                         c0 = n_1 * (nmax + 2)
                         L[n, :nmax, 0] = bg[c0 + 1: c0 + nmax + 1]
-                        # FIX: force ENL <= 0 to prevent Stuart-Landau divergence
                         # MATLAB enforces this via inEQ inequality constraint
                         ENL[n, 0]      = min(bg[c0 + nmax + 1], 0.0)
                         F[n, 0]        = bg[c0]
@@ -250,7 +248,6 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
                         rn     = XT_RES[timest % NTT, :, -1]
                     val = F[:, nl] + XX[NT, :, nl] + tmp + rn
 
-                # FIX: clip to prevent runaway
                 XX[NT + 1, :, nl] = np.clip(val, -CLIP_VAL, CLIP_VAL)
 
                 # Stuart-Landau nonlinear correction at level 0
