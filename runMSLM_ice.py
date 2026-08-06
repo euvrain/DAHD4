@@ -2,6 +2,7 @@
 runMSLM_ice.py
 
 Prediction of pan-Arctic sea ice extent using DAHD + MSLM forecasting.
+Python conversion of runMSLM_ice.m by Taylor McDonald, SETI Institute, 2026.
 
 Reference:
     Kondrashov D. et al. 2026 Accurate and robust real-time prediction of
@@ -192,16 +193,15 @@ for NFFF, NF in enumerate(range(8, 16)):
     ax.tick_params(labelsize=11)
 plt.tight_layout(); plt.show()
 
-# Fig 4 — DAHM modes (NF=1:2:15 and NF=1:2:15 quadrature, 4x4 grid)
-# MATLAB: for NF=1:2:15 → 0-indexed: 0,2,4,6,8,10,12,14
+# Fig 4 — DAHM modes (NF=1:2:15 quadrature pairs, 4x4 grid)
+# Rows 0-1: first eigenvector; Rows 2-3: second eigenvector (quadrature)
 fig, axes = plt.subplots(4, 4, figsize=(16, 16))
 NFFF = 0
-for NF in range(0, 15, 2):   # NF=1:2:15 in MATLAB (1-indexed) → 0:2:14 Python
-    # First eigenvector (col 0)
-    if NF <= 6:
-        ax = axes[0, NFFF]
-    else:
-        ax = axes[1, NFFF - 4]
+for NF in range(0, 15, 2):
+    # First eigenvector (col 0) — rows 0 and 1
+    row = 0 if NF <= 6 else 1
+    col = NFFF if NF <= 6 else NFFF - 4
+    ax = axes[row, col]
     cf = ax.contourf(np.reshape(EP[:, 0, NF], (WW, D)).T, 20, cmap='jet')
     plt.colorbar(cf, ax=ax)
     ax.set_title(f'f={round(fE2[NF], 2)}')
@@ -213,11 +213,10 @@ for NF in range(0, 15, 2):   # NF=1:2:15 in MATLAB (1-indexed) → 0:2:14 Python
 
 NFFF = 0
 for NF in range(0, 15, 2):
-    # Second eigenvector (col 1)
-    if NF <= 6:
-        ax = axes[2, NFFF]
-    else:
-        ax = axes[3, NFFF - 4]
+    # Second eigenvector (col 1) — rows 3 and 2 (SWAPPED to match MATLAB)
+    row = 3 if NF <= 6 else 2
+    col = NFFF if NF <= 6 else NFFF - 4
+    ax = axes[row, col]
     cf = ax.contourf(np.reshape(EP[:, 1, NF], (WW, D)).T, 20, cmap='jet')
     plt.colorbar(cf, ax=ax)
     ax.set_title(f'f={round(fE2[NF], 2)}')
