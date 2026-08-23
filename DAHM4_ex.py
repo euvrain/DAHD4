@@ -36,7 +36,7 @@ def DAHM4_ex(vv, W, NF, NT):
 
     fftv = np.zeros((2 * W - 1, D, NT), dtype=complex)
 
-    if NF > 1:
+    if NF > 0:
         for i in range(NT // 2):
             i2  = 2 * i
             cvv = 1j * vv[:, i]

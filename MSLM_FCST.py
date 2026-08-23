@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.linalg import lstsq
+from center import center
+from lsqlin_util import lsqlin
 
 
 def _center(x):
@@ -45,7 +47,7 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
 
     Notes:
         Written by Dmitri Kondrashov. Version date 7/8/26.
-        Python conversion by Taylor McDonald, SETI Institute, 2026.
+        Python conversion by Taylor McDonald, SETI Institute, and Dmitri Kondrashov 2026.
         Please send comments and suggestions to dkondras@atmos.ucla.edu
     """
 
@@ -71,102 +73,140 @@ def MSLM_FCST(LEAD, data, NELIN, NLEVEL, NSMT, ires, inorm, iSYM, iNL, inEQ, ind
     if inorm == 1:
         XX[:NTT, :, 0] = XX[:NTT, :, 0] / stddata
 
-    # ── Model fitting loop over levels ────────────────────────────────────────
-    for nl in range(NLEVEL):
+    block = nmax + 2  # per-oscillator block layout: [intercept, nmax linear coeffs, nonlinear coeff]
 
-        xt  = np.diff(XX[:NTT, :, nl], axis=0)
+    # ── Fit one regression model per level ──────────────────────────────────
+    for nl in range(NLEVEL):
+        xt = np.diff(XX[:NTT, :, nl], axis=0)
         NTT = xt.shape[0]
 
         if nl == 0:
-            NTE = NTT
+            NTE = xt.shape[0]
 
             if NELIN == 1:
+                # Stuart-Landau pair model, fit with true equality/inequality
+                # constrained least squares (mirrors MATLAB's lsqlin call).
                 for n0 in range(nmax // 2):
-
-                    gsvd = np.zeros((NTE * 2, (nmax + 2) * 2))
-                    xg   = np.zeros(NTE * 2)
                     indk = [2 * n0, 2 * n0 + 1]
+
+                    gsvd = np.zeros((NTE * 2, block * 2))
+                    xg = np.zeros(NTE * 2)
 
                     for n_1 in range(2):
                         n = indk[n_1]
-                        nl_term = (XX[:NTE, n, 0] *
-                                   (XX[:NTE, indk[0], 0] ** 2 +
-                                    XX[:NTE, indk[1], 0] ** 2))
-                        pred = np.column_stack([
-                            np.ones(NTE),
-                            XX[:NTE, :, 0],
-                            nl_term
-                        ])
+                        nl_term = XX[:NTE, n, 0] * (
+                            XX[:NTE, indk[0], 0] ** 2 + XX[:NTE, indk[1], 0] ** 2
+                        )
+                        pred = np.column_stack([np.ones(NTE), XX[:NTE, :, 0], nl_term])
+
                         r0 = n_1 * NTE
-                        c0 = n_1 * (nmax + 2)
-                        gsvd[r0:r0 + NTE, c0:c0 + (nmax + 2)] = pred
-                        xc, _ = _center(xt[:, n:n + 1])
+                        c0 = n_1 * block
+                        gsvd[r0:r0 + NTE, c0:c0 + block] = pred
+
+                        xc, _ = center(xt[:, n:n + 1])
                         xg[r0:r0 + NTE] = xc[:, 0]
 
-                    bg, _, _, _ = lstsq(gsvd, xg, check_finite=False)
-                    residual = xg - gsvd @ bg
+                    # ---- constraints, mirroring MATLAB's Aeq/beq/Aneq/bneq ----
+                    nSYM = 2 if iSYM == 1 else 0
+                    nNL = 1 if iNL == 1 else 0
+
+                    Aeq = np.zeros((nSYM + nNL, block * 2))
+                    beq = np.zeros(Aeq.shape[0])
+
+                    if inEQ == 1:
+                        Aneq = np.zeros((2, block * 2))
+                        bneq = np.zeros(Aneq.shape[0])
+                    else:
+                        Aneq = None
+                        bneq = None
+
+                    # Column layout within a block (0-indexed): 0 = intercept,
+                    # 1..nmax = linear coeffs, block-1 (== nmax+1) = nonlinear coeff.
+                    diag1 = 0 * block + (indk[0] + 1)
+                    off1 = 0 * block + (indk[1] + 1)
+                    diag2 = 1 * block + (indk[1] + 1)
+                    off2 = 1 * block + (indk[0] + 1)
+                    nl_col_blk1 = 0 * block + (block - 1)
+                    nl_col_blk2 = 1 * block + (block - 1)
+
+                    if iSYM == 1:
+                        # Diagonal (self-)coefficients equal between the pair.
+                        Aeq[0, diag1] = 1
+                        Aeq[0, diag2] = -1
+                        # Off-diagonal (cross-)coefficients anti-symmetric.
+                        Aeq[1, off1] = 1
+                        Aeq[1, off2] = 1
+
+                    if iNL == 1:
+                        # Nonlinear coefficients equal between the pair.
+                        Aeq[nSYM, nl_col_blk1] = 1
+                        Aeq[nSYM, nl_col_blk2] = -1
+
+                    if inEQ == 1:
+                        # Nonlinear coefficients constrained non-positive (damping).
+                        Aneq[0, nl_col_blk1] = 1
+                        Aneq[1, nl_col_blk2] = 1
+
+                    b0 = np.ones(block * 2)
+                    bg, _ = lsqlin(gsvd, xg, Aeq=Aeq, beq=beq, Aneq=Aneq, bneq=bneq, x0=b0)
+                    # print(f"DAHC Pair: {n0 + 1}, condition # {np.linalg.cond(gsvd):.6g}")
 
                     for n_1 in range(2):
-                        n  = indk[n_1]
-                        c0 = n_1 * (nmax + 2)
+                        n = indk[n_1]
+                        c0 = n_1 * block
                         L[n, :nmax, 0] = bg[c0 + 1: c0 + nmax + 1]
-                        # MATLAB enforces this via inEQ inequality constraint
-                        ENL[n, 0]      = min(bg[c0 + nmax + 1], 0.0)
-                        F[n, 0]        = bg[c0]
+                        ENL[n, 0] = bg[c0 + block - 1]
+                        F[n, 0] = bg[c0]
 
-                    XT_RES[:NTT, indk[0]:indk[1] + 1, 0] = residual.reshape(NTT, 2)
+                    residual = xg - gsvd @ bg
+                    #XT_RES[:NTT, indk[0]:indk[1] + 1, 0] = residual.reshape(NTT, 2)
+                    XT_RES[:NTT, indk[0]:indk[1] + 1, 0] = residual.reshape(NTT, 2, order='F')
 
             if NELIN == 0:
                 for n_1 in range(nmax):
                     A = np.column_stack([np.ones(NTE), XX[:NTE, :, 0]])
                     b = xt[:NTE, n_1]
                     beta, _, _, _ = lstsq(A, b, check_finite=False)
-                    L[n_1, :nmax, 0]     = beta[1:nmax + 1]
-                    F[n_1, 0]            = beta[0]
+                    L[n_1, :nmax, 0] = beta[1:nmax + 1]
+                    F[n_1, 0] = beta[0]
                     XT_RES[:NTE, n_1, 0] = b - A @ beta
-                    ENL[n_1]             = 0
+                    ENL[n_1, 0] = 0
 
         else:
             if NELIN == 1:
                 for n0 in range(nmax // 2):
                     indk = [2 * n0, 2 * n0 + 1]
-                    inds = list(indk)
-                    for nl_1 in range(nl):
-                        inds += [i + (nl_1 + 1) * nmax for i in indk]
 
-                    pred_list = []
-                    for nl_1 in range(nl):
-                        pred_list.append(np.squeeze(XX[:NTT, indk, nl_1]))
-                    pred = np.hstack(pred_list) if pred_list else np.zeros((NTT, 0))
+                    # Predictors: the pair's own two components at every level
+                    # 0..nl (inclusive of the current level).
+                    inds = []
+                    for lvl in range(nl + 1):
+                        inds += [i + lvl * nmax for i in indk]
+
+                    pred = np.hstack([np.squeeze(XX[:NTT, indk, lvl]) for lvl in range(nl + 1)])
 
                     for n in range(indk[0], indk[1] + 1):
-                        xc, _ = _center(xt[:, n:n + 1])
-                        if pred.shape[1] > 0:
-                            beta, _, _, _ = lstsq(pred, xc[:, 0], check_finite=False)
-                            L[n, inds[:len(beta)], nl]  = beta
-                            XT_RES[:NTT, n, nl] = xc[:, 0] - pred @ beta
-                        else:
-                            XT_RES[:NTT, n, nl] = xc[:, 0]
+                        xc, _ = center(xt[:, n:n + 1])
+                        beta, _, _, _ = lstsq(pred, xc[:, 0], check_finite=False)
+                        L[n, inds, nl] = beta
+                        XT_RES[:NTT, n, nl] = xc[:, 0] - pred @ beta
 
             else:
-                pred_list = []
-                for nl_1 in range(nl):
-                    pred_list.append(np.squeeze(XX[:NTT, :, nl_1]))
-                pred = np.hstack(pred_list) if pred_list else np.zeros((NTT, 0))
+                # Predictors: the full state at every level 0..nl (inclusive).
+                pred = np.hstack([np.squeeze(XX[:NTT, :, lvl]) for lvl in range(nl + 1)])
                 A = np.column_stack([np.ones(NTT), pred])
-
                 for n in range(nmax):
-                    xc, _ = _center(xt[:, n:n + 1])
+                    xc, _ = center(xt[:, n:n + 1])
                     beta, _, _, _ = lstsq(A, xc[:, 0], check_finite=False)
-                    L[n, :nmax * nl, nl] = beta[1:]
-                    F[n, nl]             = beta[0]
-                    XT_RES[:NTT, n, nl]  = xc[:, 0] - A @ beta
+                    L[n, :nmax * (nl + 1), nl] = beta[1:]
+                    F[n, nl] = beta[0]
+                    XT_RES[:NTT, n, nl] = xc[:, 0] - A @ beta
 
         stdr[:, nl] = np.std(XT_RES[:NTT, :nmax, nl], axis=0)
         stdr[:, nl] = np.where(stdr[:, nl] == 0, 1.0, stdr[:, nl])
 
         if nl != NLEVEL - 1:
-            xc, _ = _center(XT_RES[:NTT, :nmax, nl])
+            xc, _ = center(XT_RES[:NTT, :nmax, nl])
             XX[:NTT, :nmax, nl + 1] = xc
             if inorm == 1:
                 XX[:NTT, :nmax, nl + 1] = XX[:NTT, :nmax, nl + 1] / stdr[:, nl]
