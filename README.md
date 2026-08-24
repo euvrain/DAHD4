@@ -28,32 +28,58 @@ The method is described in:
 
 ```
 DAHD4/
-├── center.py                    # Center data by subtracting column-wise mean
-├── xcorr.py                     # MATLAB xcorr equivalent using scipy
-├── dahc.py                      # Compute DAH coefficients (DAHCs)
-├── hrc.py                       # Compute Reconstructed Harmonic Components (HRCs)
-├── DAHM4_ex.py                  # Compute space-time DAHMs via inverse FFT
-├── DAHD4freq_part_weight.py     # Compute DAHD spectrum (frequency-domain)
-├── generate_data.py             # Generate synthetic multivariate test dataset
-├── dahd4example.py              # Full pipeline: spectrum → DAHMs → reconstruction
-├── plothrcmodes.py              # Plot reconstructed vs reference modes
-├── center.ipynb                 # Notebook: center
-├── xcorr.ipynb                  # Notebook: xcorr
-├── dahc.ipynb                   # Notebook: dahc
-├── hrc.ipynb                    # Notebook: hrc
-├── DAHM4_ex.ipynb               # Notebook: DAHM4_ex
-├── DAHD4freq_part_weight.ipynb  # Notebook: DAHD4freq_part_weight
-├── generate_data.ipynb          # Notebook: generate_data
-├── dahd4example.ipynb           # Notebook: full pipeline
-├── plothrcmodes.ipynb           # Notebook: plot HRC modes
-├── runMSLM_ice.py               # MSLM forecast driver: DAHD/HRC + Stuart-Landau ensemble forecast (v1.1.0)
-├── MSLM_FCST.py                 # Multi-level stochastic Stuart-Landau ensemble forecast engine (v1.1.0)
-├── runMSLM_ice.ipynb             # Notebook: MSLM forecast driver (v1.1.0)
-├── runMSLM_ice_test.ipynb        # Notebook: MSLM forecast driver, test/dev variant (v1.1.0)
-├── robustness_test.py            # Training-window sensitivity test for the September SIE forecast (v1.1.0)
-├── robustness_test.ipynb         # Notebook: training-window sensitivity test (v1.1.0)
-├── validate_translation.py       # Automated validation suite: unit, data-alignment, and forecast-sanity checks (v1.1.0)
-└── matlab/                      # Original MATLAB source files
+├── matlab code/
+│   ├── center.m
+│   ├── dahc.m
+│   ├── dahd4example.m
+│   ├── DAHD4freq_part_weight.m
+│   ├── DAHM4_ex.m
+│   ├── generate_data.m
+│   ├── hrc.m
+│   ├── MSLM_INT.m
+│   ├── plothrcmodes.m
+│   ├── runmsmDAHD4_L96.m
+│   └── statglob.m
+├── center.ipynb                              # Notebook: center
+├── center.py                                 # Center data by subtracting column-wise mean
+├── CHANGELOG.md
+├── CITATION.cff
+├── codemeta.json
+├── dahc.ipynb                                # Notebook: dahc
+├── dahc.py                                   # Compute DAH coefficients (DAHCs)
+├── dahd4example.ipynb                        # Notebook: full pipeline of synthetic example
+├── dahd4example.py                           # Full pipeline: spectrum → DAHMs → reconstruction
+├── DAHD4freq_part_weight.ipynb               # Notebook: DAHD4freq_part_weight
+├── DAHD4freq_part_weight.py                  # Compute DAHD spectrum (frequency-domain)
+├── dahdexample4.pdf                          # Description of synthetic data+noise example
+├── DAHM4_ex.py                               # Compute space-time DAHMs via inverse FFT
+├── generate_data.ipynb                       # Notebook: generate_data
+├── generate_data.py                          # Generate synthetic multivariate test dataset
+├── hrc.ipynb                                 # Notebook: hrc
+├── hrc.py                                    # Compute Reconstructed Harmonic Components (HRCs)
+├── L96_F6.mat
+├── LICENSE
+├── lsqlin_util.py
+├── MSLM-L96.pdf                              # Description of MSLM L96 model
+├── MSLM_FCST.py                              # Multi-level stochastic Stuart-Landau ensemble forecast engine (v1.1.0)
+├── MSLM_INT.py                               # Multi-level stochastic Stuart-Landau ensemble simulation engine (v1.1.0)
+├── N_Sea_Ice_Index_Regional_Daily_Data_G02135-2024June17.xlsx
+├── plothrcmodes.ipynb                        # Notebook: plot HRC modes
+├── plothrcmodes.py                           # Plot reconstructed vs reference modes
+├── README.md
+├── ROBSF.mat
+├── ROBSFF.mat
+├── robustness_results.pkl
+├── robustness_test.ipynb                     # Notebook: training-window sensitivity test (v1.1.0)
+├── robustness_test.png
+├── runMSLM_ice.ipynb                         # Notebook: MSLM forecast driver (v1.1.0)
+├── runMSLM_ice.py                            # MSLM forecast driver: DAHD/HRC + Stuart-Landau ensemble forecast (v1.1.0)
+├── runmsmDAHD4_L96.py                        # MSLM L96 driver (v1.1.0)
+├── statglob.py
+├── validation.py
+├── xcorr.ipynb                               # Notebook: xcorr
+└── xcorr.py                                  # MATLAB xcorr equivalent using scipy
+
 ```
 
 ---
