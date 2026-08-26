@@ -15,10 +15,11 @@ Original MATLAB code written by Dmitri Kondrashov (UCLA). Python conversion by T
 
 DAHD is a frequency-domain spectral decomposition method for multivariate time series. It identifies spatio-temporal oscillatory modes by eigendecomposing a Hermitian cross-spectral density matrix, then reconstructs those modes via Harmonic Reconstruction Components (HRCs). This repo provides a complete, license-free Python implementation of the DAHD pipeline, validated against the original MATLAB output.
 
-As of v1.1.0, the repo also includes the downstream Arctic sea-ice application: a Multi-Level Stochastic Stuart-Landau Model (MSLM) forecast pipeline that uses the DAHD/HRC decomposition of regional sea-ice-extent time series to drive an ensemble forecast, including a September sea-ice-extent point prediction and a training-window robustness/sensitivity test.
+As of v1.1.0, the repo also includes the downstream Arctic sea-ice application: a Multi-Level Stochastic Stuart-Landau Model (MSLM) forecast pipeline that uses the DAHD/HRC decomposition of regional sea-ice-extent time series to drive an ensemble forecast, including a September sea-ice-extent point prediction and a training-window robustness/sensitivity test. Long-term MSLM integration is demonstrated for L96 model data. 
 
 The method is described in:
 - Chekroun, M. D., and D. Kondrashov, 2017: *Data-adaptive harmonic spectra and multilayer Stuart-Landau models.* Chaos, 27, 093110. doi:10.1063/1.4989400
+- Kondrashov, D., M. D. Chekroun and P. Berloff, 2018: *Multiscale Stuart-Landau Emulators: Application to Wind-Driven Ocean Gyres.* Fluids, 3(1), 21, doi:10.3390/fluids3010021.
 - Kondrashov, D., E. Ryzhov, and P. Berloff, 2020: *Data-adaptive harmonic analysis of oceanic waves and turbulent flows.* Chaos, 30, 061105. doi:10.1063/5.0012077
 - Kondrashov, D., I. Sudakow, V. Livina, and Q. Yang, 2026: *Accurate and robust real-time prediction of September Arctic sea ice.* Chaos, 36, 023110. doi:10.1063/5.0295634
 
